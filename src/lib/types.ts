@@ -2,8 +2,10 @@ export interface InterviewSetup {
   role: string;
   type: string;
   difficulty: string;
-  jobDescription: string;
-  resumeText: string;
+  jobDescription?: string;
+  resumeText?: string;
+  questionCount?: number;
+  companyTarget?: string;
 }
 
 export interface Feedback {
@@ -11,6 +13,11 @@ export interface Feedback {
   gap: string;
   score: number;
   idealAnswer: string;
+  rubric?: {
+    clarity: number;
+    technicalDepth: number;
+    specificity: number;
+  };
 }
 
 export interface InterviewMessage {
@@ -18,6 +25,7 @@ export interface InterviewMessage {
   content: string;
   feedback?: Feedback;
   nextQuestion?: string;
+  timestamp?: number;
 }
 
 export interface SessionResult {
@@ -31,4 +39,7 @@ export interface SessionResult {
   studyList: string[];
   verdict: "Not Ready" | "Almost There" | "Ready to Interview";
   timestamp: number;
+  durationSeconds?: number;
+  totalWords?: number;
+  feedbacks?: Feedback[];
 }
