@@ -6,6 +6,7 @@ export interface InterviewSetup {
   resumeText?: string;
   questionCount?: number;
   companyTarget?: string;
+  customQuestions?: string;
 }
 
 export interface Feedback {

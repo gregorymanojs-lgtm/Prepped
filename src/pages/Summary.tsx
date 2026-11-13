@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { InterviewSetup, Feedback, SessionResult } from "@/lib/types";
 import { useHistory } from "@/hooks/useHistory";
 import { playSound } from "@/lib/sound";
+import { generateAISummary } from "@/lib/groq";
 import {
   BarChart,
   Bar,
@@ -31,6 +32,9 @@ import {
   Clock,
   Sparkles,
   Download,
+  FileText,
+  Loader2,
+  Brain,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,6 +53,8 @@ const Summary = () => {
   const { addSession } = useHistory();
   const [copied, setCopied] = useState(false);
   const [checkedStudy, setCheckedStudy] = useState<Record<number, boolean>>({});
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
 
   const state = location.state as {
     setup: InterviewSetup;
@@ -86,6 +92,18 @@ const Summary = () => {
     };
 
     addSession(session);
+
+    // Generate AI summary after session is saved
+    setAiSummaryLoading(true);
+    generateAISummary({
+      setup,
+      feedbacks,
+      scores,
+      durationSeconds: durationSeconds || 0,
+    })
+      .then((summary) => setAiSummary(summary))
+      .catch(() => setAiSummary(null))
+      .finally(() => setAiSummaryLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -415,13 +433,68 @@ ${studyList.map((item) => `- ${item}`).join("\n")}`;
           </div>
         </motion.div>
 
+        {/* AI-Powered Resume-Aware Executive Summary */}
+        <motion.div
+          className="glass glass-card rounded-3xl p-6 space-y-4 card-hover"
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          custom={5}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-primary-foreground">
+              <Brain className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold font-display">AI Executive Summary</h3>
+              <p className="text-[11px] text-muted-foreground">
+                {setup.resumeText
+                  ? "Personalized analysis based on your resume & session performance"
+                  : "Personalized analysis based on your session performance"}
+              </p>
+            </div>
+            {setup.resumeText && (
+              <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold border border-primary/20 flex items-center gap-1">
+                <FileText className="h-3 w-3" />
+                Resume-Aware
+              </span>
+            )}
+          </div>
+
+          {aiSummaryLoading ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                <span>Generating personalized analysis{setup.resumeText ? " from your resume" : ""}...</span>
+              </div>
+              <div className="space-y-2">
+                {[80, 95, 70, 85].map((w, i) => (
+                  <div key={i} className="h-3 rounded-full bg-muted/60 animate-pulse" style={{ width: `${w}%` }} />
+                ))}
+              </div>
+            </div>
+          ) : aiSummary ? (
+            <div className="space-y-3">
+              {aiSummary.split(/\n\n+/).map((para, i) => (
+                <p key={i} className="text-xs text-foreground/85 leading-relaxed">
+                  {para.trim()}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">
+              Summary unavailable — complete an interview session to generate your personalized analysis.
+            </p>
+          )}
+        </motion.div>
+
         {/* Action Buttons */}
         <motion.div
           className="flex flex-col sm:flex-row gap-3 pt-2"
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          custom={5}
+          custom={6}
         >
           <Button
             variant="outline"

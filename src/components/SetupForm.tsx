@@ -98,6 +98,8 @@ const SetupForm = ({ initialRole, initialType }: SetupFormProps) => {
   const [questionCount, setQuestionCount] = useState(5);
   const [jobDescription, setJobDescription] = useState("");
   const [showJd, setShowJd] = useState(false);
+  const [customQuestions, setCustomQuestions] = useState("");
+  const [showCustomQ, setShowCustomQ] = useState(false);
   const [resumeText, setResumeText] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [parsingResume, setParsingResume] = useState(false);
@@ -114,6 +116,7 @@ const SetupForm = ({ initialRole, initialType }: SetupFormProps) => {
       difficulty,
       jobDescription: jobDescription.trim(),
       resumeText: resumeText.trim(),
+      customQuestions: customQuestions.trim(),
       questionCount,
     };
     navigate("/interview", { state: { setup } });
@@ -342,32 +345,29 @@ const SetupForm = ({ initialRole, initialType }: SetupFormProps) => {
         </div>
       </div>
 
-      {/* 4. Optional Context: Resume & Job Description */}
-      <div className="space-y-4 pt-2 border-t border-border/60">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
-            <FileText className="h-3.5 w-3.5 text-primary" />
-            Tailoring Data (Optional)
-          </Label>
-          <button
-            type="button"
-            onClick={() => setShowJd(!showJd)}
-            className="text-[11px] text-primary hover:underline font-medium"
-          >
-            {showJd ? "Hide Job Description" : "+ Add Job Description"}
-          </button>
-        </div>
+      {/* 4. Resume Upload — Prominent */}
+      <div className="space-y-3 pt-2 border-t border-border/60">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
+          <FileText className="h-3.5 w-3.5 text-primary" />
+          Upload Your Resume
+          <span className="text-[10px] text-primary font-normal ml-1 px-1.5 py-0.5 rounded-md bg-primary/10">Recommended</span>
+        </Label>
+        <p className="text-[11px] text-muted-foreground -mt-1">
+          The AI will read your resume and ask questions about your actual projects, tech stack, and experience.
+        </p>
 
         {/* Resume Dropzone */}
         <div>
           {resumeFile ? (
-            <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
-              <div className="flex items-center gap-2.5 truncate">
-                <FileText className="h-4 w-4 text-primary shrink-0" />
+            <div className="flex items-center justify-between rounded-2xl border border-primary/40 bg-primary/8 px-4 py-3.5 shadow-sm shadow-primary/10">
+              <div className="flex items-center gap-3 truncate">
+                <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center text-primary shrink-0">
+                  <FileText className="h-4 w-4" />
+                </div>
                 <div>
                   <p className="text-xs font-semibold truncate">{resumeFile.name}</p>
-                  <p className="text-[10px] text-primary">
-                    Parsed · {resumeText.split(/\s+/).length} words extracted for AI context
+                  <p className="text-[10px] text-primary font-medium">
+                    ✓ {resumeText.split(/\s+/).filter(Boolean).length} words parsed · AI will personalize all questions
                   </p>
                 </div>
               </div>
@@ -377,24 +377,34 @@ const SetupForm = ({ initialRole, initialType }: SetupFormProps) => {
                   setResumeFile(null);
                   setResumeText("");
                 }}
-                className="text-muted-foreground hover:text-foreground p-1 rounded-md"
+                className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-background/60 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
           ) : (
-            <label className="flex items-center justify-center gap-3 rounded-2xl border border-dashed border-border/80 hover:border-primary/50 bg-background/30 hover:bg-primary/5 p-4 cursor-pointer transition-all duration-200 group">
-              <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <Upload className="h-4 w-4" />
+            <label className="flex items-center gap-4 rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary/60 bg-primary/3 hover:bg-primary/8 p-5 cursor-pointer transition-all duration-200 group">
+              <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 group-hover:bg-primary/20 transition-all shrink-0">
+                {parsingResume ? (
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <Upload className="h-5 w-5" />
+                )}
               </div>
-              <div className="text-left">
-                <p className="text-xs font-semibold text-foreground">
-                  {parsingResume ? "Parsing Resume PDF..." : "Upload Resume (PDF)"}
+              <div className="text-left flex-1">
+                <p className="text-sm font-bold text-foreground">
+                  {parsingResume ? "Parsing your resume..." : "Drop your Resume PDF here"}
                 </p>
-                <p className="text-[11px] text-muted-foreground">
-                  Questions will reference your real projects, tech stack & career gaps
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {parsingResume
+                    ? "Extracting text for AI context..."
+                    : "Questions will reference your real projects, technologies & career gaps"}
                 </p>
               </div>
+              <span className="text-[10px] font-mono text-muted-foreground shrink-0">PDF only</span>
               <input
                 type="file"
                 accept=".pdf"
@@ -413,9 +423,9 @@ const SetupForm = ({ initialRole, initialType }: SetupFormProps) => {
                       const page = await pdf.getPage(i);
                       const content = await page.getTextContent();
                       text +=
-                      content.items
-                        .map((item) => ("str" in item ? (item as { str: string }).str : ""))
-                        .join(" ") + "\n";
+                        content.items
+                          .map((item) => ("str" in item ? (item as { str: string }).str : ""))
+                          .join(" ") + "\n";
                     }
                     setResumeText(text.trim());
                     playSound("chime");
@@ -430,8 +440,35 @@ const SetupForm = ({ initialRole, initialType }: SetupFormProps) => {
             </label>
           )}
         </div>
+      </div>
 
-        {/* Optional JD expandable */}
+      {/* 5. Optional Extras: JD & Custom Questions */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowJd(!showJd)}
+            className={`text-[11px] px-3 py-1.5 rounded-xl border transition-all font-medium ${
+              showJd
+                ? "bg-primary/10 border-primary/40 text-primary"
+                : "border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
+            }`}
+          >
+            {showJd ? "− Job Description" : "+ Job Description"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCustomQ(!showCustomQ)}
+            className={`text-[11px] px-3 py-1.5 rounded-xl border transition-all font-medium ${
+              showCustomQ
+                ? "bg-primary/10 border-primary/40 text-primary"
+                : "border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
+            }`}
+          >
+            {showCustomQ ? "− Custom Questions" : "+ Custom Questions"}
+          </button>
+        </div>
+
         <AnimatePresence>
           {showJd && (
             <motion.div
@@ -449,6 +486,28 @@ const SetupForm = ({ initialRole, initialType }: SetupFormProps) => {
               />
               <p className="text-[10px] text-muted-foreground">
                 AI will calibrate questions to specifically evaluate responsibilities in this listing.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showCustomQ && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-1.5 overflow-hidden"
+            >
+              <Textarea
+                placeholder={`Enter specific questions you want the AI to ask, one per line. Example:\n- Tell me about your experience with distributed systems\n- Walk me through your largest engineering project\n- How do you approach system design tradeoffs?`}
+                value={customQuestions}
+                onChange={(e) => setCustomQuestions(e.target.value)}
+                rows={4}
+                className="bg-background/60 rounded-xl text-xs leading-relaxed font-mono"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                The AI will incorporate your questions into the natural interview flow.
               </p>
             </motion.div>
           )}
