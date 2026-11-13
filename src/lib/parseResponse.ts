@@ -38,16 +38,38 @@ export function buildSystemMessage(setup: {
   role: string;
   type: string;
   difficulty: string;
-  jobDescription: string;
-  resumeText: string;
+  jobDescription?: string;
+  resumeText?: string;
+  customQuestions?: string;
 }): string {
-  let msg = `You are a senior interviewer at a top tech company conducting a ${setup.difficulty} level ${setup.type} interview for a ${setup.role} position.`;
-  if (setup.jobDescription) {
-    msg += ` The job description is: "${setup.jobDescription}". Tailor your questions to it.`;
-  }
+  let msg = `You are a rigorous senior ${setup.type} interviewer at a top-tier tech company evaluating a ${setup.difficulty}-level ${setup.role} candidate.`;
+
   if (setup.resumeText) {
-    msg += ` The candidate's resume: "${setup.resumeText}". Reference the candidate's specific projects and experience.`;
+    msg += `\n\nCANDIDATE RESUME (use this extensively):\n"""\n${setup.resumeText.slice(0, 4000)}\n"""\n\nIMPORTANT: You MUST ask questions that directly reference the candidate's specific projects, technologies, companies, and experiences from their resume. Do NOT ask generic questions — always personalize to what's on the resume.`;
   }
-  msg += ` Ask one focused question at a time. After the user answers, respond in exactly this format — Strength: what they did well. Gap: what was missing. Score: X/10. Ideal Answer: a concise strong example. Then ask the next question. Be direct and honest. High standards. No fluff.`;
+
+  if (setup.jobDescription) {
+    msg += `\n\nTARGET JOB DESCRIPTION:\n"""\n${setup.jobDescription}\n"""\nCalibrate every question to evaluate fit for the responsibilities and requirements in this listing.`;
+  }
+
+  if (setup.customQuestions) {
+    msg += `\n\nCUSTOM QUESTIONS TO INCLUDE (incorporate these into the interview flow):\n${setup.customQuestions}`;
+  }
+
+  msg += `\n\nINTERVIEW RULES:
+- Ask ONE focused question at a time
+- After the candidate answers, respond in EXACTLY this format (no deviations):
+
+Strength: [1-2 sentences on what they did well]
+Gap: [1-2 sentences on what was missing or could be stronger]
+Score: X/10
+Ideal Answer: [A concise, exemplary 2-4 sentence model response they should have given]
+
+Next Question: [Your next question, deeply tailored to their resume/background]
+
+- Be direct, honest, and hold high standards. No flattery or fluff.
+- For behavioral questions, evaluate using the STAR framework (Situation, Task, Action, Result).
+- For technical questions, probe for depth, trade-offs, and real-world reasoning.`;
+
   return msg;
 }
